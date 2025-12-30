@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"name": "firmware",
+			"path": "./firmware"
+		},
+		{
+			"name": "web",
+			"path": "./web"
+		},
+		{
+			"name": "homeassistant",
+			"path": "./homeassistant"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.git": true,
+			"**/node_modules": true,
+			"**/.pio": true,
+			"**/build": true,
+			"**/dist": true
+		}
+	}
+}
+
