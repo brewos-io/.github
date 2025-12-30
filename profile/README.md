@@ -1,7 +1,7 @@
 # BrewOS
 
 <p align="center">
-  <img src="firmware/assets/1080/horizontal/full-color/Brewos-1080.png" alt="BrewOS Logo" width="400">
+  <img src="https://raw.githubusercontent.com/brewos-io/firmware/main/assets/1080/horizontal/full-color/Brewos-1080.png" alt="BrewOS Logo" width="400">
 </p>
 
 <p align="center">
