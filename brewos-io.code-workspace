@@ -1,6 +1,10 @@
 {
 	"folders": [
 		{
+			"name": "BrewOS (Root)",
+			"path": "."
+		},
+		{
 			"name": "firmware",
 			"path": "./firmware"
 		},
