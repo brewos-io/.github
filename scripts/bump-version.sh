@@ -29,22 +29,28 @@ if [ -d "$ROOT_DIR/firmware" ]; then
   echo "📦 Updating firmware version..."
   cd "$ROOT_DIR/firmware"
   
-  # Update VERSION file
-  sed -i.bak "s/^FIRMWARE_VERSION=.*/FIRMWARE_VERSION=$VERSION/" VERSION
-  rm -f VERSION.bak
-  
-  # Update version.json if it exists
-  if [ -f "version.json" ]; then
-    node -e "
-      const fs = require('fs');
-      const json = JSON.parse(fs.readFileSync('version.json', 'utf8'));
-      json.version = '$VERSION';
-      json.updatedAt = new Date().toISOString();
-      fs.writeFileSync('version.json', JSON.stringify(json, null, 2) + '\n');
-    "
+  # Use version.js script to update all firmware version files
+  # This updates: VERSION, version.json, config.h files, protocol_defs.h, version-manifest.json
+  if [ -f "src/scripts/version.js" ]; then
+    node src/scripts/version.js --set "$VERSION"
+    echo "  ✓ Firmware version updated (all files)"
+  else
+    # Fallback to manual update if version.js doesn't exist
+    echo "  ⚠️  version.js not found, using manual update"
+    sed -i.bak "s/^FIRMWARE_VERSION=.*/FIRMWARE_VERSION=$VERSION/" VERSION
+    rm -f VERSION.bak
+    
+    if [ -f "version.json" ]; then
+      node -e "
+        const fs = require('fs');
+        const json = JSON.parse(fs.readFileSync('version.json', 'utf8'));
+        json.version = '$VERSION';
+        json.updatedAt = new Date().toISOString();
+        fs.writeFileSync('version.json', JSON.stringify(json, null, 2) + '\n');
+      "
+    fi
+    echo "  ✓ Firmware version updated (basic files only)"
   fi
-  
-  echo "  ✓ Firmware version updated"
 else
   echo "  ⚠️  Firmware directory not found, skipping"
 fi

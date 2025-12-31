@@ -124,14 +124,22 @@ Each repository can be released independently:
 **Update Process:**
 
 ```bash
-# Update VERSION file
-echo "FIRMWARE_VERSION=0.2.0" > VERSION
-
-# Update version.json
+# Recommended: Use version.js script (updates all files automatically)
+cd firmware
 node src/scripts/version.js --set 0.2.0
 
-# Update config.h manually or via script
+# Or for coordinated releases, use the root script:
+cd ..  # from root
+./scripts/bump-version.sh 0.2.0  # This calls version.js internally
 ```
+
+The `version.js` script automatically updates:
+- `VERSION` file
+- `version.json`
+- `src/pico/include/config.h` (Pico version defines)
+- `src/esp32/include/config.h` (ESP32 version defines)
+- `src/shared/protocol_defs.h` (Protocol version - use `--protocol` flag)
+- `src/web/public/version-manifest.json` (OTA update manifest)
 
 ### App Repository
 
@@ -266,9 +274,8 @@ Create a helper script for coordinated version bumps:
 # bump-version.sh
 VERSION=$1
 
-# Update firmware
+# Update firmware (version.js updates all files automatically)
 cd firmware
-echo "FIRMWARE_VERSION=$VERSION" > VERSION
 node src/scripts/version.js --set $VERSION
 
 # Update app
