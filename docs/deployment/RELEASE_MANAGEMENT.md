@@ -267,27 +267,25 @@ git checkout cloud-v0.1.9  # Previous version
 
 ## Version Bumping Script
 
-Create a helper script for coordinated version bumps:
+The root `scripts/bump-version.sh` script handles coordinated version bumps:
 
 ```bash
-#!/bin/bash
-# bump-version.sh
-VERSION=$1
+# From root directory
+./scripts/bump-version.sh 0.2.0
+```
 
-# Update firmware (version.js updates all files automatically)
+This script:
+- Updates firmware using `version.js` (updates all firmware files automatically)
+- Updates app `package.json`
+- Updates cloud `package.json`
+
+**Note:** For firmware-only releases or protocol version changes, use `version.js` directly:
+
+```bash
 cd firmware
-node src/scripts/version.js --set $VERSION
-
-# Update app
-cd ../app
-npm version $VERSION --no-git-tag
-
-# Update cloud
-cd ../cloud
-npm version $VERSION --no-git-tag
-
-echo "Versions updated to $VERSION"
-echo "Review changes and commit"
+node src/scripts/version.js --set 0.2.0              # Set firmware version
+node src/scripts/version.js --protocol 2             # Update protocol version
+node src/scripts/version.js --set 0.2.0 --protocol 2   # Both
 ```
 
 ## Troubleshooting
