@@ -5,21 +5,24 @@
 # This script mirrors the CI workflow and runs all checks required 
 # before merging a PR across the monorepo:
 #
-# 1. Build App for ESP32 (from app repository)
-# 2. Build Firmware (ESP32 + Pico from firmware repository)
-# 3. Run Pico Unit Tests (from firmware repository)
+# 1. Type check and build App (from app repository)
+# 2. Type check and build Cloud + Admin (from cloud repository)
+# 3. Build App for ESP32 (from app repository)
+# 4. Build Firmware (ESP32 + Pico from firmware repository)
+# 5. Run Pico Unit Tests (from firmware repository)
 #
 # Note: This script works with the split monorepo structure where
 # repositories are siblings in the workspace.
 #
 # Usage:
-#   ./scripts/verify_pr.sh [--skip-firmware] [--skip-tests] [--skip-app] [--fast]
+#   ./scripts/verify_pr.sh [--skip-firmware] [--skip-tests] [--skip-app] [--skip-cloud] [--fast]
 #
 # Options:
 #   --skip-firmware  Skip firmware builds (ESP32 + Pico)
 #   --skip-tests     Skip running unit tests
-#   --skip-app       Skip building app for ESP32
-#   --fast           Skip firmware builds, tests, and app build
+#   --skip-app       Skip app typecheck, build, and ESP32 build
+#   --skip-cloud     Skip cloud typecheck and build
+#   --fast           Skip firmware builds, tests, app, and cloud
 #   --help, -h       Show this help message
 #
 
@@ -41,6 +44,7 @@ WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Repository paths
 FIRMWARE_DIR="$WORKSPACE_ROOT/firmware"
 APP_DIR="$WORKSPACE_ROOT/app"
+CLOUD_DIR="$WORKSPACE_ROOT/cloud"
 
 # Timing
 START_TIME=$(date +%s)
@@ -50,6 +54,7 @@ STEP_START_TIME=$START_TIME
 SKIP_FIRMWARE=false
 SKIP_TESTS=false
 SKIP_APP=false
+SKIP_CLOUD=false
 
 for arg in "$@"; do
     case $arg in
@@ -65,14 +70,19 @@ for arg in "$@"; do
             SKIP_APP=true
             shift
             ;;
+        --skip-cloud)
+            SKIP_CLOUD=true
+            shift
+            ;;
         --fast)
             SKIP_FIRMWARE=true
             SKIP_TESTS=true
             SKIP_APP=true
+            SKIP_CLOUD=true
             shift
             ;;
         --help|-h)
-            head -n 20 "$0" | tail -n +2
+            head -n 25 "$0" | tail -n +2
             exit 0
             ;;
         *)
@@ -168,32 +178,100 @@ echo ""
 print_step "Checking repositories..."
 check_repository "Firmware" "$FIRMWARE_DIR"
 check_repository "App" "$APP_DIR"
+check_repository "Cloud" "$CLOUD_DIR"
 print_success "All repositories found"
 
 # ----------------------------------------------------------------------------
-# Step 1: Build App for ESP32
+# Step 1: Type check and build App
 # ----------------------------------------------------------------------------
 if [ "$SKIP_APP" = false ]; then
-    print_step "1/3 Building App for ESP32 (from app repository)..."
+    print_step "Type checking App..."
     
-    if [ ! -f "$APP_DIR/scripts/build-esp32.sh" ]; then
-        print_error "App build script not found at $APP_DIR/scripts/build-esp32.sh"
+    if [ ! -f "$APP_DIR/package.json" ]; then
+        print_error "App package.json not found"
         exit 1
     fi
     
     cd "$APP_DIR"
-    ESP32_DATA_DIR="$FIRMWARE_DIR/src/esp32/data" ./scripts/build-esp32.sh
+    if [ ! -d "node_modules" ]; then
+        print_info "Installing app dependencies..."
+        npm ci > /dev/null 2>&1
+    fi
+    
+    npx tsc --noEmit
+    print_success "App type check passed"
+    
+    print_step "Building App (Cloud)..."
+    npm run build > /dev/null 2>&1
+    print_success "App built for Cloud"
+    
+    print_step "Building App for ESP32..."
+    if [ ! -f "$APP_DIR/scripts/build-esp32.sh" ]; then
+        print_error "App build script not found at $APP_DIR/scripts/build-esp32.sh"
+        exit 1
+    fi
+    ESP32_DATA_DIR="$FIRMWARE_DIR/src/esp32/data" ./scripts/build-esp32.sh > /dev/null 2>&1
     print_success "App built for ESP32"
 else
-    print_step "1/3 Building App for ESP32..."
+    print_step "App checks (typecheck, build, ESP32 build)..."
     print_warning "Skipped (--skip-app or --fast)"
 fi
 
 # ----------------------------------------------------------------------------
-# Step 2: Build Firmware (optional)
+# Step 2: Type check and build Cloud + Admin
+# ----------------------------------------------------------------------------
+if [ "$SKIP_CLOUD" = false ]; then
+    print_step "Type checking Cloud + Admin..."
+    
+    if [ ! -f "$CLOUD_DIR/package.json" ]; then
+        print_error "Cloud package.json not found"
+        exit 1
+    fi
+    
+    cd "$CLOUD_DIR"
+    if [ ! -d "node_modules" ]; then
+        print_info "Installing cloud dependencies..."
+        npm ci > /dev/null 2>&1
+    fi
+    
+    # Type check cloud service
+    npx tsc --noEmit
+    print_success "Cloud service type check passed"
+    
+    # Type check admin
+    if [ ! -f "$CLOUD_DIR/admin/package.json" ]; then
+        print_error "Admin package.json not found"
+        exit 1
+    fi
+    
+    cd "$CLOUD_DIR/admin"
+    if [ ! -d "node_modules" ]; then
+        print_info "Installing admin dependencies..."
+        npm ci > /dev/null 2>&1
+    fi
+    
+    npx tsc --noEmit
+    print_success "Admin type check passed"
+    
+    # Build cloud service
+    cd "$CLOUD_DIR"
+    print_step "Building Cloud + Admin..."
+    npm run build > /dev/null 2>&1
+    
+    # Build admin UI
+    cd "$CLOUD_DIR/admin"
+    npm run build > /dev/null 2>&1
+    print_success "Cloud + Admin built successfully"
+else
+    print_step "Cloud checks (typecheck, build)..."
+    print_warning "Skipped (--skip-cloud or --fast)"
+fi
+
+# ----------------------------------------------------------------------------
+# Step 3: Build Firmware (optional)
 # ----------------------------------------------------------------------------
 if [ "$SKIP_FIRMWARE" = false ]; then
-    print_step "2/3 Building Firmware (ESP32 + Pico)..."
+    print_step "Building Firmware (ESP32 + Pico)..."
     
     if [ ! -f "$FIRMWARE_DIR/src/scripts/build_firmware.sh" ]; then
         print_error "Firmware build script not found at $FIRMWARE_DIR/src/scripts/build_firmware.sh"
@@ -204,15 +282,15 @@ if [ "$SKIP_FIRMWARE" = false ]; then
     ./build_firmware.sh all
     print_success "Firmware built successfully"
 else
-    print_step "2/3 Building Firmware (ESP32 + Pico)..."
+    print_step "Building Firmware (ESP32 + Pico)..."
     print_warning "Skipped (--skip-firmware or --fast)"
 fi
 
 # ----------------------------------------------------------------------------
-# Step 3: Run Unit Tests (optional)
+# Step 4: Run Unit Tests (optional)
 # ----------------------------------------------------------------------------
 if [ "$SKIP_TESTS" = false ]; then
-    print_step "3/3 Running Pico Unit Tests..."
+    print_step "Running Pico Unit Tests..."
     
     if [ ! -f "$FIRMWARE_DIR/src/scripts/run_pico_tests.sh" ]; then
         print_error "Pico test script not found at $FIRMWARE_DIR/src/scripts/run_pico_tests.sh"
@@ -223,7 +301,7 @@ if [ "$SKIP_TESTS" = false ]; then
     ./run_pico_tests.sh
     print_success "All unit tests passed"
 else
-    print_step "3/3 Running Pico Unit Tests..."
+    print_step "Running Pico Unit Tests..."
     print_warning "Skipped (--skip-tests or --fast)"
 fi
 
@@ -245,8 +323,8 @@ echo -e "  ${MAGENTA}Ready to create/merge pull request${NC}"
 echo ""
 
 # Optional suggestions based on mode
-if [ "$SKIP_FIRMWARE" = true ]; then
-    echo -e "  ${YELLOW}Note:${NC} Firmware builds were skipped. Run without --fast for full verification."
+if [ "$SKIP_FIRMWARE" = true ] || [ "$SKIP_APP" = true ] || [ "$SKIP_CLOUD" = true ]; then
+    echo -e "  ${YELLOW}Note:${NC} Some checks were skipped. Run without --fast for full verification."
     echo ""
 fi
 
