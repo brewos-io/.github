@@ -65,32 +65,14 @@ if [ -n "$BUMP_TYPE" ]; then
   echo "Current version: $CURRENT_VERSION"
   echo "Bumping $BUMP_TYPE version..."
   
-  # Use version.js to calculate the new version
-  cd "$ROOT_DIR/firmware"
-  if [ -f "src/scripts/version.js" ]; then
-    # Get the bumped version (dry run)
-    VERSION=$(node src/scripts/version.js --bump "$BUMP_TYPE" 2>/dev/null | grep -E "^Bumped|^Firmware Version:" | tail -1 | sed 's/.*to //' | sed 's/Firmware Version: //' | tr -d ' ')
-    if [ -z "$VERSION" ]; then
-      # Fallback: parse version manually
-      IFS='.' read -r major minor patch <<< "${CURRENT_VERSION%%-*}"
-      case "$BUMP_TYPE" in
-        major) major=$((major + 1)); minor=0; patch=0 ;;
-        minor) minor=$((minor + 1)); patch=0 ;;
-        patch) patch=$((patch + 1)) ;;
-      esac
-      VERSION="$major.$minor.$patch"
-    fi
-  else
-    # Fallback: parse version manually
-    IFS='.' read -r major minor patch <<< "${CURRENT_VERSION%%-*}"
-    case "$BUMP_TYPE" in
-      major) major=$((major + 1)); minor=0; patch=0 ;;
-      minor) minor=$((minor + 1)); patch=0 ;;
-      patch) patch=$((patch + 1)) ;;
-    esac
-    VERSION="$major.$minor.$patch"
-  fi
-  cd "$ROOT_DIR"
+  # Calculate new version manually (same logic as version.js)
+  IFS='.' read -r major minor patch <<< "${CURRENT_VERSION%%-*}"
+  case "$BUMP_TYPE" in
+    major) major=$((major + 1)); minor=0; patch=0 ;;
+    minor) minor=$((minor + 1)); patch=0 ;;
+    patch) patch=$((patch + 1)) ;;
+  esac
+  VERSION="$major.$minor.$patch"
   
   echo "New version: $VERSION"
   echo ""
