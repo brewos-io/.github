@@ -9,6 +9,14 @@
 			"path": "./firmware"
 		},
 		{
+			"name": "app",
+			"path": "./app"
+		},
+		{
+			"name": "cloud",
+			"path": "./cloud"
+		},
+		{
 			"name": "web",
 			"path": "./web"
 		},
@@ -17,14 +25,13 @@
 			"path": "./homeassistant"
 		}
 	],
-	"settings": {
-		"files.exclude": {
-			"**/.git": true,
-			"**/node_modules": true,
-			"**/.pio": true,
-			"**/build": true,
-			"**/dist": true
-		}
-	}
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/node_modules": true,
+      "**/.pio": true,
+      "**/build": true,
+      "**/dist": true
+    }
+  }
 }
-
