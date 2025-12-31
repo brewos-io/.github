@@ -1,25 +1,100 @@
 #!/bin/bash
 # Bump version across all repositories
-# Usage: ./scripts/bump-version.sh 0.2.0
+# Usage: 
+#   ./scripts/bump-version.sh 0.2.0              # Set specific version
+#   ./scripts/bump-version.sh --bump minor        # Bump minor version
+#   ./scripts/bump-version.sh --bump major        # Bump major version
+#   ./scripts/bump-version.sh --bump patch        # Bump patch version
 
 set -e
 
-VERSION=$1
-
-if [ -z "$VERSION" ]; then
-  echo "Usage: $0 <version>"
-  echo "Example: $0 0.2.0"
-  exit 1
-fi
-
-# Validate version format (semver)
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
-  echo "Error: Invalid version format. Use semantic versioning (e.g., 0.2.0 or 0.2.0-beta.1)"
-  exit 1
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Parse arguments
+BUMP_TYPE=""
+VERSION=""
+
+if [ "$1" == "--bump" ]; then
+  BUMP_TYPE=$2
+  if [ -z "$BUMP_TYPE" ]; then
+    echo "Error: --bump requires a type (major, minor, or patch)"
+    echo "Usage: $0 --bump <major|minor|patch>"
+    exit 1
+  fi
+  if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
+    echo "Error: Invalid bump type. Use: major, minor, or patch"
+    exit 1
+  fi
+elif [ -z "$1" ]; then
+  echo "Usage: $0 <version> | --bump <major|minor|patch>"
+  echo ""
+  echo "Examples:"
+  echo "  $0 0.2.0              # Set specific version"
+  echo "  $0 --bump minor       # Bump minor version"
+  echo "  $0 --bump major        # Bump major version"
+  echo "  $0 --bump patch        # Bump patch version"
+  exit 1
+else
+  VERSION=$1
+  # Validate version format (semver)
+  if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+    echo "Error: Invalid version format. Use semantic versioning (e.g., 0.2.0 or 0.2.0-beta.1)"
+    exit 1
+  fi
+fi
+
+# Get current firmware version (source of truth)
+get_firmware_version() {
+  if [ -d "$ROOT_DIR/firmware" ] && [ -f "$ROOT_DIR/firmware/VERSION" ]; then
+    grep "^FIRMWARE_VERSION=" "$ROOT_DIR/firmware/VERSION" | cut -d'=' -f2
+  else
+    echo ""
+  fi
+}
+
+# If bumping, get current version and calculate new version
+if [ -n "$BUMP_TYPE" ]; then
+  CURRENT_VERSION=$(get_firmware_version)
+  if [ -z "$CURRENT_VERSION" ]; then
+    echo "Error: Could not determine current firmware version"
+    echo "Make sure firmware/VERSION file exists"
+    exit 1
+  fi
+  
+  echo "Current version: $CURRENT_VERSION"
+  echo "Bumping $BUMP_TYPE version..."
+  
+  # Use version.js to calculate the new version
+  cd "$ROOT_DIR/firmware"
+  if [ -f "src/scripts/version.js" ]; then
+    # Get the bumped version (dry run)
+    VERSION=$(node src/scripts/version.js --bump "$BUMP_TYPE" 2>/dev/null | grep -E "^Bumped|^Firmware Version:" | tail -1 | sed 's/.*to //' | sed 's/Firmware Version: //' | tr -d ' ')
+    if [ -z "$VERSION" ]; then
+      # Fallback: parse version manually
+      IFS='.' read -r major minor patch <<< "${CURRENT_VERSION%%-*}"
+      case "$BUMP_TYPE" in
+        major) major=$((major + 1)); minor=0; patch=0 ;;
+        minor) minor=$((minor + 1)); patch=0 ;;
+        patch) patch=$((patch + 1)) ;;
+      esac
+      VERSION="$major.$minor.$patch"
+    fi
+  else
+    # Fallback: parse version manually
+    IFS='.' read -r major minor patch <<< "${CURRENT_VERSION%%-*}"
+    case "$BUMP_TYPE" in
+      major) major=$((major + 1)); minor=0; patch=0 ;;
+      minor) minor=$((minor + 1)); patch=0 ;;
+      patch) patch=$((patch + 1)) ;;
+    esac
+    VERSION="$major.$minor.$patch"
+  fi
+  cd "$ROOT_DIR"
+  
+  echo "New version: $VERSION"
+  echo ""
+fi
 
 echo "🔄 Bumping version to $VERSION across all repositories..."
 echo ""
@@ -32,7 +107,13 @@ if [ -d "$ROOT_DIR/firmware" ]; then
   # Use version.js script to update all firmware version files
   # This updates: VERSION, version.json, config.h files, protocol_defs.h, version-manifest.json
   if [ -f "src/scripts/version.js" ]; then
-    node src/scripts/version.js --set "$VERSION"
+    if [ -n "$BUMP_TYPE" ]; then
+      # Use --bump for firmware to ensure all files are updated correctly
+      node src/scripts/version.js --bump "$BUMP_TYPE"
+    else
+      # Use --set for specific version
+      node src/scripts/version.js --set "$VERSION"
+    fi
     echo "  ✓ Firmware version updated (all files)"
   else
     # Fallback to manual update if version.js doesn't exist
