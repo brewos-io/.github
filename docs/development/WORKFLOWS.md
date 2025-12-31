@@ -36,10 +36,6 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Creates GitHub release with firmware artifacts
 - **Note:** Cloud deployment is handled by cloud repository
 
-#### `deploy.yml` - Deprecated
-- This workflow is deprecated
-- Cloud and app deployments are now handled by their respective repositories
-
 ### App Repository
 
 **Location:** `app/.github/workflows/`
