@@ -76,8 +76,8 @@ fi
 echo "🚀 Creating release $VERSION..."
 echo ""
 
-# Check if we're on main branch and up to date
-check_repo() {
+# Check if we're on main branch and up to date (before version bump)
+check_repo_clean() {
   local repo=$1
   local name=$2
   
@@ -97,28 +97,59 @@ check_repo() {
   # Check branch
   BRANCH=$(git branch --show-current)
   if [ "$BRANCH" != "main" ]; then
-    echo "  ⚠️  $name is not on main branch (current: $BRANCH)"
-    read -p "  Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      return 1
-    fi
+    echo "  ❌ $name is not on main branch (current: $BRANCH)"
+    echo "     Please switch to main branch before creating a release"
+    return 1
   fi
   
-  # Check for uncommitted changes
+  # Check for uncommitted changes (before version bump)
   if ! git diff-index --quiet HEAD --; then
-    echo "  ⚠️  $name has uncommitted changes"
-    read -p "  Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      return 1
-    fi
+    echo "  ❌ $name has uncommitted changes"
+    echo "     Please commit or stash changes before creating a release"
+    git status --short
+    return 1
   fi
   
   # Pull latest
   echo "  📥 Pulling latest changes..."
   git pull origin main || true
   
+  return 0
+}
+
+# Commit version changes in a repository
+commit_version_changes() {
+  local repo=$1
+  local name=$2
+  local version=$3
+  
+  if [ ! -d "$ROOT_DIR/$repo" ]; then
+    return 1
+  fi
+  
+  cd "$ROOT_DIR/$repo"
+  
+  if [ ! -d ".git" ]; then
+    return 1
+  fi
+  
+  # Check if there are any changes to commit
+  if git diff-index --quiet HEAD --; then
+    echo "  ℹ️  No changes to commit in $name"
+    return 0
+  fi
+  
+  # Stage all changes
+  git add -A
+  
+  # Commit
+  echo "  💾 Committing version changes..."
+  git commit -m "chore: bump version to $version" || {
+    echo "  ⚠️  Failed to commit in $name"
+    return 1
+  }
+  
+  echo "  ✓ Version changes committed in $name"
   return 0
 }
 
@@ -162,6 +193,41 @@ create_tag() {
   return 0
 }
 
+# Check all repos are clean BEFORE bumping
+echo "🔍 Checking repositories are clean..."
+echo ""
+
+REPO_ERRORS=0
+
+if [ -d "$ROOT_DIR/firmware" ]; then
+  if ! check_repo_clean "firmware" "Firmware"; then
+    REPO_ERRORS=$((REPO_ERRORS + 1))
+  fi
+fi
+
+if [ -d "$ROOT_DIR/app" ]; then
+  if ! check_repo_clean "app" "App"; then
+    REPO_ERRORS=$((REPO_ERRORS + 1))
+  fi
+fi
+
+if [ -d "$ROOT_DIR/cloud" ]; then
+  if ! check_repo_clean "cloud" "Cloud"; then
+    REPO_ERRORS=$((REPO_ERRORS + 1))
+  fi
+fi
+
+if [ $REPO_ERRORS -gt 0 ]; then
+  echo ""
+  echo "❌ Some repositories have uncommitted changes or are not on main branch"
+  echo "   Please fix the issues above before creating a release"
+  exit 1
+fi
+
+echo ""
+echo "✅ All repositories are clean"
+echo ""
+
 # Bump versions first (if not already bumped)
 if [ -z "$BUMP_TYPE" ]; then
   echo "📝 Bumping versions..."
@@ -169,21 +235,88 @@ if [ -z "$BUMP_TYPE" ]; then
 fi
 
 echo ""
+echo "💾 Committing version changes..."
+
+# Commit version changes in each repo
+if [ -d "$ROOT_DIR/firmware" ]; then
+  commit_version_changes "firmware" "Firmware" "$VERSION"
+fi
+
+if [ -d "$ROOT_DIR/app" ]; then
+  commit_version_changes "app" "App" "$VERSION"
+fi
+
+if [ -d "$ROOT_DIR/cloud" ]; then
+  commit_version_changes "cloud" "Cloud" "$VERSION"
+fi
+
+echo ""
 echo "🏷️  Creating tags..."
 
 # Firmware
-if check_repo "firmware" "Firmware"; then
-  create_tag "firmware" "" "Firmware"
+if [ -d "$ROOT_DIR/firmware" ]; then
+  cd "$ROOT_DIR/firmware"
+  if [ -d ".git" ]; then
+    create_tag "firmware" "" "Firmware"
+  fi
 fi
 
 # App
-if check_repo "app" "App"; then
-  create_tag "app" "app-" "App"
+if [ -d "$ROOT_DIR/app" ]; then
+  cd "$ROOT_DIR/app"
+  if [ -d ".git" ]; then
+    create_tag "app" "app-" "App"
+  fi
 fi
 
 # Cloud
-if check_repo "cloud" "Cloud"; then
-  create_tag "cloud" "cloud-" "Cloud"
+if [ -d "$ROOT_DIR/cloud" ]; then
+  cd "$ROOT_DIR/cloud"
+  if [ -d ".git" ]; then
+    create_tag "cloud" "cloud-" "Cloud"
+  fi
+fi
+
+echo ""
+echo "📤 Pushing commits and tags..."
+
+# Push commits and tags for each repo
+push_repo() {
+  local repo=$1
+  local name=$2
+  
+  if [ ! -d "$ROOT_DIR/$repo" ] || [ ! -d "$ROOT_DIR/$repo/.git" ]; then
+    return 1
+  fi
+  
+  cd "$ROOT_DIR/$repo"
+  
+  # Check if there are commits to push
+  if git rev-parse --verify "origin/main" >/dev/null 2>&1; then
+    LOCAL=$(git rev-parse main)
+    REMOTE=$(git rev-parse origin/main)
+    if [ "$LOCAL" != "$REMOTE" ]; then
+      echo "  📤 Pushing commits in $name..."
+      git push origin main || {
+        echo "  ⚠️  Failed to push commits in $name"
+        return 1
+      }
+    fi
+  fi
+  
+  return 0
+}
+
+if [ -d "$ROOT_DIR/firmware" ]; then
+  push_repo "firmware" "Firmware"
+fi
+
+if [ -d "$ROOT_DIR/app" ]; then
+  push_repo "app" "App"
+fi
+
+if [ -d "$ROOT_DIR/cloud" ]; then
+  push_repo "cloud" "Cloud"
 fi
 
 echo ""
