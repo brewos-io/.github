@@ -45,11 +45,34 @@ The core firmware for BrewOS, including:
 
 - **Pico RP2350 Firmware** - Real-time machine control (PID, boilers, pumps, valves)
 - **ESP32-S3 Firmware** - Connectivity hub (WiFi, web server, MQTT, BLE, LVGL display)
-- **Web Interface** - Progressive Web App (PWA) for monitoring and control
-- **Cloud Service** - Remote access relay service
 
 **Status:** ✅ Active Development  
 **Platforms:** RP2350 (Pico), ESP32-S3
+
+### [app](https://github.com/brewos-io/app) - Progressive Web App
+
+Progressive Web App (PWA) for BrewOS espresso machine control and monitoring.
+
+- Built with React, TypeScript, and Vite
+- Real-time monitoring and control interface
+- Supports both ESP32 (local) and cloud deployments
+- Shot statistics, schedules, MQTT configuration, and more
+
+**Status:** ✅ Active  
+**Tech Stack:** React, TypeScript, Vite
+
+### [cloud](https://github.com/brewos-io/cloud) - Cloud Service
+
+Cloud service providing remote access to BrewOS devices.
+
+- WebSocket relay for secure remote control
+- Google OAuth authentication
+- Push notifications support
+- Admin dashboard for device management
+- SQLite database for device and user management
+
+**Status:** ✅ Active  
+**Tech Stack:** Node.js, Express, TypeScript
 
 ### [web](https://github.com/brewos-io/web) - Marketing Website
 
@@ -91,6 +114,8 @@ Home Assistant integration components for BrewOS:
 
    ```bash
    git clone https://github.com/brewos-io/firmware.git
+   git clone https://github.com/brewos-io/app.git
+   git clone https://github.com/brewos-io/cloud.git
    git clone https://github.com/brewos-io/web.git
    git clone https://github.com/brewos-io/homeassistant.git
    ```
@@ -138,6 +163,13 @@ See the [Compatibility List](https://github.com/brewos-io/firmware/blob/main/doc
 
 ## Documentation
 
+### Organization Documentation
+
+- **[Documentation Index](docs/README.md)** - Complete documentation guide
+- **[Setup Guides](docs/setup/)** - Workspace and development environment setup
+- **[Development Guides](docs/development/)** - CI/CD workflows and development practices
+- **[Deployment Guides](docs/deployment/)** - Release management and deployment
+
 ### Getting Started
 
 - [Firmware Setup Guide](https://github.com/brewos-io/firmware/blob/main/SETUP.md)
@@ -154,7 +186,8 @@ See the [Compatibility List](https://github.com/brewos-io/firmware/blob/main/doc
 
 - [Home Assistant Integration](https://github.com/brewos-io/homeassistant#readme)
 - [MQTT Integration](https://github.com/brewos-io/firmware/blob/main/docs/esp32/integrations/MQTT.md)
-- [Cloud Remote Access](https://github.com/brewos-io/firmware/blob/main/docs/cloud/README.md)
+- [Cloud Service](https://github.com/brewos-io/cloud#readme)
+- [Progressive Web App](https://github.com/brewos-io/app#readme)
 
 ### Hardware
 

@@ -1,23 +1,25 @@
 # BrewOS Organization Workspace
 
-This workspace file allows you to open all BrewOS repositories in Cursor at once.
+This workspace file allows you to open all BrewOS repositories in Cursor/VS Code at once.
 
-## Setup
+## Quick Start
 
-1. **Clone the repositories** (if not already cloned):
+1. **Clone all repositories** (if not already cloned):
    ```bash
-   cd /Users/mizrachiran/Projects
+   cd /Users/mizrachiran/Projects/brewos-io
+   git clone https://github.com/brewos-io/firmware.git
+   git clone https://github.com/brewos-io/app.git
+   git clone https://github.com/brewos-io/cloud.git
    git clone https://github.com/brewos-io/web.git
    git clone https://github.com/brewos-io/homeassistant.git
-   # firmware is already at ./all
    ```
 
-2. **Open the workspace in Cursor**:
+2. **Open the workspace:**
    ```bash
-   cursor /Users/mizrachiran/Projects/brewos-io.code-workspace
+   cursor brewos-io.code-workspace
    ```
    
-   Or from Cursor: File → Open Workspace from File → Select `brewos-io.code-workspace`
+   Or from Cursor: **File → Open Workspace from File** → Select `brewos-io.code-workspace`
 
 ## Benefits
 
@@ -25,16 +27,27 @@ This workspace file allows you to open all BrewOS repositories in Cursor at once
 - **Unified search**: Search across all repos at once
 - **Easy navigation**: Switch between repos in the sidebar
 - **Shared settings**: Common settings apply to all repos
+- **Unified Source Control**: See changes from all repositories in one view
 
 ## Repositories
 
-- **firmware** - Main firmware (ESP32, Pico, web UI, cloud)
+- **firmware** - ESP32 and Pico firmware
+- **app** - Progressive Web App (shared between ESP32 and cloud)
+- **cloud** - Cloud service for remote access
 - **web** - Marketing website (GitHub Pages)
 - **homeassistant** - Home Assistant integration
+
+## Troubleshooting
+
+If you don't see changes from all repositories in the Source Control view:
+
+1. **Reload the workspace**: `Cmd+Shift+P` → "Reload Window"
+2. **Check repository selector**: Look for dropdown in Source Control view
+3. **Verify git repositories**: Each folder should be a git repository (check for `.git` directory)
 
 ## Notes
 
 - Each repository maintains its own git history
 - You can commit/push from each repo independently
 - The workspace file is just a convenience - repos can still be opened individually
-
+- See [Documentation](docs/README.md) for more information

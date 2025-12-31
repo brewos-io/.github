@@ -1,30 +1,30 @@
 {
-	"folders": [
-		{
-			"name": "BrewOS (Root)",
-			"path": "."
-		},
-		{
-			"name": "firmware",
-			"path": "./firmware"
-		},
-		{
-			"name": "app",
-			"path": "./app"
-		},
-		{
-			"name": "cloud",
-			"path": "./cloud"
-		},
-		{
-			"name": "web",
-			"path": "./web"
-		},
-		{
-			"name": "homeassistant",
-			"path": "./homeassistant"
-		}
-	],
+  "folders": [
+    {
+      "name": "BrewOS (Root)",
+      "path": "."
+    },
+    {
+      "name": "BrewOS Firmware",
+      "path": "firmware"
+    },
+    {
+      "name": "BrewOS App",
+      "path": "app"
+    },
+    {
+      "name": "BrewOS Cloud",
+      "path": "cloud"
+    },
+    {
+      "name": "BrewOS Web",
+      "path": "web"
+    },
+    {
+      "name": "BrewOS Home Assistant",
+      "path": "homeassistant"
+    }
+  ],
   "settings": {
     "files.exclude": {
       "**/.git": true,
@@ -32,6 +32,18 @@
       "**/.pio": true,
       "**/build": true,
       "**/dist": true
-    }
+    },
+    "git.autoRepositoryDetection": true,
+    "git.detectSubmodules": true,
+    "git.scanRepositories": [
+      ".",
+      "./firmware",
+      "./app",
+      "./cloud",
+      "./web",
+      "./homeassistant"
+    ],
+    "scm.repositories.visible": 10,
+    "scm.defaultViewMode": "tree"
   }
 }

@@ -1,0 +1,197 @@
+# Coordinated release workflow
+# This workflow helps coordinate releases across multiple repositories
+# It can be triggered manually or via workflow_dispatch
+name: "Coordinated Release Helper"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g., 0.2.0)"
+        required: true
+        type: string
+      message:
+        description: "Release message"
+        required: false
+        type: string
+        default: "Release"
+      skip_firmware:
+        description: "Skip firmware release"
+        required: false
+        type: boolean
+        default: false
+      skip_app:
+        description: "Skip app release"
+        required: false
+        type: boolean
+        default: false
+      skip_cloud:
+        description: "Skip cloud release"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  validate:
+    name: Validate Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      is_prerelease: ${{ steps.validate.outputs.is_prerelease }}
+    steps:
+      - name: Validate Version Format
+        id: validate
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          # Validate semver format
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Use semantic versioning: MAJOR.MINOR.PATCH[-PRERELEASE]"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if prerelease
+          if [[ "$VERSION" == *"-"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "✅ Version validated: $VERSION"
+
+  create-tags:
+    name: Create Release Tags
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Firmware Tag
+        if: ${{ !github.event.inputs.skip_firmware }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            const tag = `v${version}`;
+            const message = '${{ github.event.inputs.message }}' || `Release ${version}`;
+            
+            try {
+              await github.rest.git.createRef({
+                owner: 'brewos-io',
+                repo: 'firmware',
+                ref: `refs/tags/${tag}`,
+                sha: (await github.rest.repos.getBranch({
+                  owner: 'brewos-io',
+                  repo: 'firmware',
+                  branch: 'main'
+                })).data.commit.sha
+              });
+              console.log(`✅ Created tag: ${tag} in firmware`);
+            } catch (error) {
+              if (error.status === 422) {
+                console.log(`⚠️  Tag ${tag} already exists in firmware`);
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Create App Tag
+        if: ${{ !github.event.inputs.skip_app }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            const tag = `app-v${version}`;
+            const message = '${{ github.event.inputs.message }}' || `Release ${version}`;
+            
+            try {
+              await github.rest.git.createRef({
+                owner: 'brewos-io',
+                repo: 'app',
+                ref: `refs/tags/${tag}`,
+                sha: (await github.rest.repos.getBranch({
+                  owner: 'brewos-io',
+                  repo: 'app',
+                  branch: 'main'
+                })).data.commit.sha
+              });
+              console.log(`✅ Created tag: ${tag} in app`);
+            } catch (error) {
+              if (error.status === 422) {
+                console.log(`⚠️  Tag ${tag} already exists in app`);
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Create Cloud Tag
+        if: ${{ !github.event.inputs.skip_cloud }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            const tag = `cloud-v${version}`;
+            const message = '${{ github.event.inputs.message }}' || `Release ${version}`;
+            
+            try {
+              await github.rest.git.createRef({
+                owner: 'brewos-io',
+                repo: 'cloud',
+                ref: `refs/tags/${tag}`,
+                sha: (await github.rest.repos.getBranch({
+                  owner: 'brewos-io',
+                  repo: 'cloud',
+                  branch: 'main'
+                })).data.commit.sha
+              });
+              console.log(`✅ Created tag: ${tag} in cloud`);
+            } catch (error) {
+              if (error.status === 422) {
+                console.log(`⚠️  Tag ${tag} already exists in cloud`);
+              } else {
+                throw error;
+              }
+            }
+
+  summary:
+    name: Release Summary
+    needs: [validate, create-tags]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Summary
+        run: |
+          echo "# Release Summary"
+          echo ""
+          echo "**Version:** ${{ needs.validate.outputs.version }}"
+          echo "**Type:** ${{ needs.validate.outputs.is_prerelease == 'true' && 'Pre-release' || 'Stable Release' }}"
+          echo ""
+          echo "## Tags Created"
+          echo ""
+          echo "| Repository | Tag | Status |"
+          echo "|------------|-----|--------|"
+          if [ "${{ github.event.inputs.skip_firmware }}" != "true" ]; then
+            echo "| firmware | v${{ needs.validate.outputs.version }} | ✅ |"
+          fi
+          if [ "${{ github.event.inputs.skip_app }}" != "true" ]; then
+            echo "| app | app-v${{ needs.validate.outputs.version }} | ✅ |"
+          fi
+          if [ "${{ github.event.inputs.skip_cloud }}" != "true" ]; then
+            echo "| cloud | cloud-v${{ needs.validate.outputs.version }} | ✅ |"
+          fi
+          echo ""
+          echo "## Next Steps"
+          echo ""
+          echo "1. Monitor workflow runs:"
+          echo "   - [Firmware](https://github.com/brewos-io/firmware/actions)"
+          echo "   - [App](https://github.com/brewos-io/app/actions)"
+          echo "   - [Cloud](https://github.com/brewos-io/cloud/actions)"
+          echo ""
+          echo "2. Verify releases are created"
+          echo ""
+          echo "3. Test production deployment"
+
+
