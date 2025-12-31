@@ -134,6 +134,7 @@ cd ..  # from root
 ```
 
 The `version.js` script automatically updates:
+
 - `VERSION` file
 - `version.json`
 - `src/pico/include/config.h` (Pico version defines)
@@ -275,6 +276,7 @@ The root `scripts/bump-version.sh` script handles coordinated version bumps:
 ```
 
 This script:
+
 - Updates firmware using `version.js` (updates all firmware files automatically)
 - Updates app `package.json`
 - Updates cloud `package.json`
