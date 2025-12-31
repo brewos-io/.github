@@ -5,8 +5,9 @@ This workspace file allows you to open all BrewOS repositories in Cursor/VS Code
 ## Quick Start
 
 1. **Clone all repositories** (if not already cloned):
+
    ```bash
-   cd /Users/mizrachiran/Projects/brewos-io
+   mkdir brewos-io && cd brewos-io
    git clone https://github.com/brewos-io/firmware.git
    git clone https://github.com/brewos-io/app.git
    git clone https://github.com/brewos-io/cloud.git
@@ -15,10 +16,11 @@ This workspace file allows you to open all BrewOS repositories in Cursor/VS Code
    ```
 
 2. **Open the workspace:**
+
    ```bash
    cursor brewos-io.code-workspace
    ```
-   
+
    Or from Cursor: **File → Open Workspace from File** → Select `brewos-io.code-workspace`
 
 ## Benefits
