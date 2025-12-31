@@ -153,21 +153,10 @@ commit_version_changes() {
   return 0
 }
 
-# Create tag in repository
+# Create tag in repository (assumes we're already in the repo directory)
 create_tag() {
-  local repo=$1
-  local tag_prefix=$2
-  local name=$3
-  
-  if [ ! -d "$ROOT_DIR/$repo" ]; then
-    return 1
-  fi
-  
-  cd "$ROOT_DIR/$repo"
-  
-  if [ ! -d ".git" ]; then
-    return 1
-  fi
+  local tag_prefix=$1
+  local name=$2
   
   local tag="${tag_prefix}v${VERSION}"
   
@@ -251,37 +240,10 @@ if [ -d "$ROOT_DIR/cloud" ]; then
 fi
 
 echo ""
-echo "🏷️  Creating tags..."
+echo "📤 Pushing commits..."
 
-# Firmware
-if [ -d "$ROOT_DIR/firmware" ]; then
-  cd "$ROOT_DIR/firmware"
-  if [ -d ".git" ]; then
-    create_tag "firmware" "" "Firmware"
-  fi
-fi
-
-# App
-if [ -d "$ROOT_DIR/app" ]; then
-  cd "$ROOT_DIR/app"
-  if [ -d ".git" ]; then
-    create_tag "app" "app-" "App"
-  fi
-fi
-
-# Cloud
-if [ -d "$ROOT_DIR/cloud" ]; then
-  cd "$ROOT_DIR/cloud"
-  if [ -d ".git" ]; then
-    create_tag "cloud" "cloud-" "Cloud"
-  fi
-fi
-
-echo ""
-echo "📤 Pushing commits and tags..."
-
-# Push commits and tags for each repo
-push_repo() {
+# Push commits for each repo
+push_commits() {
   local repo=$1
   local name=$2
   
@@ -301,22 +263,54 @@ push_repo() {
         echo "  ⚠️  Failed to push commits in $name"
         return 1
       }
+      echo "  ✓ Commits pushed in $name"
+    else
+      echo "  ℹ️  No commits to push in $name"
     fi
+  else
+    # First push - no remote main branch yet
+    echo "  📤 Pushing commits in $name (first push)..."
+    git push -u origin main || {
+      echo "  ⚠️  Failed to push commits in $name"
+      return 1
+    }
+    echo "  ✓ Commits pushed in $name"
   fi
   
   return 0
 }
 
 if [ -d "$ROOT_DIR/firmware" ]; then
-  push_repo "firmware" "Firmware"
+  push_commits "firmware" "Firmware"
 fi
 
 if [ -d "$ROOT_DIR/app" ]; then
-  push_repo "app" "App"
+  push_commits "app" "App"
 fi
 
 if [ -d "$ROOT_DIR/cloud" ]; then
-  push_repo "cloud" "Cloud"
+  push_commits "cloud" "Cloud"
+fi
+
+echo ""
+echo "🏷️  Creating tags..."
+
+# Firmware
+if [ -d "$ROOT_DIR/firmware" ] && [ -d "$ROOT_DIR/firmware/.git" ]; then
+  cd "$ROOT_DIR/firmware"
+  create_tag "" "Firmware"
+fi
+
+# App
+if [ -d "$ROOT_DIR/app" ] && [ -d "$ROOT_DIR/app/.git" ]; then
+  cd "$ROOT_DIR/app"
+  create_tag "app-" "App"
+fi
+
+# Cloud
+if [ -d "$ROOT_DIR/cloud" ] && [ -d "$ROOT_DIR/cloud/.git" ]; then
+  cd "$ROOT_DIR/cloud"
+  create_tag "cloud-" "Cloud"
 fi
 
 echo ""
