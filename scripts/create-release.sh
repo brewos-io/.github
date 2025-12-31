@@ -54,29 +54,10 @@ get_firmware_version() {
   fi
 }
 
-# If bumping, first bump versions, then get the new version
-if [ -n "$BUMP_TYPE" ]; then
-  echo "🔄 Bumping $BUMP_TYPE version..."
-  "$SCRIPT_DIR/bump-version.sh" --bump "$BUMP_TYPE"
-  
-  # Get the new version after bumping
-  VERSION=$(get_firmware_version)
-  if [ -z "$VERSION" ]; then
-    echo "Error: Could not determine version after bump"
-    exit 1
-  fi
-  
-  if [ -z "$MESSAGE" ]; then
-    MESSAGE="Release $VERSION"
-  fi
-  
-  echo ""
-fi
-
-echo "🚀 Creating release $VERSION..."
+echo "🚀 Creating release..."
 echo ""
 
-# Check if we're on main branch and up to date (before version bump)
+# Check if we're on main branch and up to date (BEFORE any version changes)
 check_repo_clean() {
   local repo=$1
   local name=$2
@@ -217,11 +198,45 @@ echo ""
 echo "✅ All repositories are clean"
 echo ""
 
-# Bump versions first (if not already bumped)
-if [ -z "$BUMP_TYPE" ]; then
-  echo "📝 Bumping versions..."
+# Now bump versions (after confirming repos are clean)
+if [ -n "$BUMP_TYPE" ]; then
+  echo "🔄 Bumping $BUMP_TYPE version..."
+  "$SCRIPT_DIR/bump-version.sh" --bump "$BUMP_TYPE"
+  
+  # Get the new version after bumping
+  VERSION=$(get_firmware_version)
+  if [ -z "$VERSION" ]; then
+    echo "Error: Could not determine version after bump"
+    exit 1
+  fi
+  
+  if [ -z "$MESSAGE" ]; then
+    MESSAGE="Release $VERSION"
+  fi
+  
+  echo ""
+  echo "✅ Version bumped to $VERSION"
+  echo ""
+elif [ -z "$VERSION" ]; then
+  # If no version specified and not bumping, get current version
+  VERSION=$(get_firmware_version)
+  if [ -z "$VERSION" ]; then
+    echo "Error: Could not determine version. Specify a version or use --bump"
+    exit 1
+  fi
+  
+  if [ -z "$MESSAGE" ]; then
+    MESSAGE="Release $VERSION"
+  fi
+else
+  # Specific version provided
+  echo "📝 Setting versions to $VERSION..."
   "$SCRIPT_DIR/bump-version.sh" "$VERSION"
+  echo ""
 fi
+
+echo "🚀 Creating release $VERSION..."
+echo ""
 
 echo ""
 echo "💾 Committing version changes..."
