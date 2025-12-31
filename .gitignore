@@ -5,6 +5,8 @@
 
 # Exclude subdirectories (they are separate git repositories)
 firmware/
+app/
+cloud/
 web/
 homeassistant/
 
