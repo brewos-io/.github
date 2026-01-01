@@ -5,8 +5,8 @@
 # This script mirrors the CI workflow and runs all checks required 
 # before merging a PR across the monorepo:
 #
-# 1. Type check and build App (from app repository)
-# 2. Type check and build Cloud + Admin (from cloud repository)
+# 1. Lint, type check and build App (from app repository)
+# 2. Lint, type check and build Cloud + Admin (from cloud repository)
 # 3. Build App for ESP32 (from app repository)
 # 4. Build Firmware (ESP32 + Pico from firmware repository)
 # 5. Run Pico Unit Tests (from firmware repository)
@@ -20,8 +20,8 @@
 # Options:
 #   --skip-firmware  Skip firmware builds (ESP32 + Pico)
 #   --skip-tests     Skip running unit tests
-#   --skip-app       Skip app typecheck, build, and ESP32 build
-#   --skip-cloud     Skip cloud typecheck and build
+#   --skip-app       Skip app lint, typecheck, build, and ESP32 build
+#   --skip-cloud     Skip cloud lint, typecheck and build
 #   --fast           Skip firmware builds, tests, app, and cloud
 #   --help, -h       Show this help message
 #
@@ -183,11 +183,9 @@ check_repository "Cloud" "$CLOUD_DIR"
 print_success "All repositories found"
 
 # ----------------------------------------------------------------------------
-# Step 1: Type check and build App
+# Step 1: Lint, type check and build App
 # ----------------------------------------------------------------------------
 if [ "$SKIP_APP" = false ]; then
-    print_step "Type checking App..."
-    
     if [ ! -f "$APP_DIR/package.json" ]; then
         print_error "App package.json not found"
         exit 1
@@ -199,6 +197,11 @@ if [ "$SKIP_APP" = false ]; then
         npm ci > /dev/null 2>&1
     fi
     
+    print_step "Linting App..."
+    npm run lint > /dev/null 2>&1
+    print_success "App lint passed"
+    
+    print_step "Type checking App..."
     npx tsc --noEmit
     print_success "App type check passed"
     
@@ -214,16 +217,14 @@ if [ "$SKIP_APP" = false ]; then
     ESP32_DATA_DIR="$FIRMWARE_DIR/src/esp32/data" ./scripts/build-esp32.sh > /dev/null 2>&1
     print_success "App built for ESP32"
 else
-    print_step "App checks (typecheck, build, ESP32 build)..."
+    print_step "App checks (lint, typecheck, build, ESP32 build)..."
     print_warning "Skipped (--skip-app or --fast)"
 fi
 
 # ----------------------------------------------------------------------------
-# Step 2: Type check and build Cloud + Admin
+# Step 2: Lint, type check and build Cloud + Admin
 # ----------------------------------------------------------------------------
 if [ "$SKIP_CLOUD" = false ]; then
-    print_step "Type checking Cloud + Admin..."
-    
     if [ ! -f "$CLOUD_DIR/package.json" ]; then
         print_error "Cloud package.json not found"
         exit 1
@@ -235,6 +236,11 @@ if [ "$SKIP_CLOUD" = false ]; then
         npm ci > /dev/null 2>&1
     fi
     
+    print_step "Linting Cloud..."
+    npm run lint > /dev/null 2>&1
+    print_success "Cloud lint passed"
+    
+    print_step "Type checking Cloud + Admin..."
     # Type check cloud service
     npx tsc --noEmit
     print_success "Cloud service type check passed"
@@ -264,7 +270,7 @@ if [ "$SKIP_CLOUD" = false ]; then
     npm run build > /dev/null 2>&1
     print_success "Cloud + Admin built successfully"
 else
-    print_step "Cloud checks (typecheck, build)..."
+    print_step "Cloud checks (lint, typecheck, build)..."
     print_warning "Skipped (--skip-cloud or --fast)"
 fi
 
