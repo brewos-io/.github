@@ -124,8 +124,9 @@ print_info() {
     echo -e "${MAGENTA}→ $1${NC}"
 }
 
-# Error handler
+# Error handler for unexpected failures
 on_error() {
+    local exit_code=$?
     echo ""
     print_error "Verification failed at: ${BASH_COMMAND}"
     echo ""
@@ -134,7 +135,7 @@ on_error() {
     print_info "  2. Make necessary changes"
     print_info "  3. Run this script again"
     echo ""
-    exit 1
+    exit $exit_code
 }
 
 trap on_error ERR
@@ -279,8 +280,20 @@ if [ "$SKIP_FIRMWARE" = false ]; then
     fi
     
     cd "$FIRMWARE_DIR/src/scripts"
-    ./build_firmware.sh all
-    print_success "Firmware built successfully"
+    # Capture output and exit code, only show on error
+    set +e  # Temporarily disable exit on error to capture output
+    BUILD_OUTPUT=$(./build_firmware.sh all 2>&1)
+    BUILD_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        print_success "Firmware built successfully"
+    else
+        print_error "Firmware build failed"
+        echo ""
+        echo "$BUILD_OUTPUT"
+        exit $BUILD_EXIT_CODE
+    fi
 else
     print_step "Building Firmware (ESP32 + Pico)..."
     print_warning "Skipped (--skip-firmware or --fast)"
@@ -298,8 +311,20 @@ if [ "$SKIP_TESTS" = false ]; then
     fi
     
     cd "$FIRMWARE_DIR/src/scripts"
-    ./run_pico_tests.sh
-    print_success "All unit tests passed"
+    # Capture output and exit code, only show on error
+    set +e  # Temporarily disable exit on error to capture output
+    TEST_OUTPUT=$(./run_pico_tests.sh 2>&1)
+    TEST_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $TEST_EXIT_CODE -eq 0 ]; then
+        print_success "All unit tests passed"
+    else
+        print_error "Unit tests failed"
+        echo ""
+        echo "$TEST_OUTPUT"
+        exit $TEST_EXIT_CODE
+    fi
 else
     print_step "Running Pico Unit Tests..."
     print_warning "Skipped (--skip-tests or --fast)"
