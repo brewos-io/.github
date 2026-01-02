@@ -17,18 +17,21 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 **Location:** `firmware/.github/workflows/`
 
 #### `ci.yml` - Continuous Integration
+
 - Runs on PRs to `main`
 - Detects changes to Pico or ESP32 code
 - **Pico:** Runs unit tests and builds all machine types
 - **ESP32:** Checks out app repository and builds app for ESP32, then builds ESP32 firmware
 
 #### `build_firmware.yml` - Firmware Build & Test
+
 - Runs on PRs affecting firmware code
 - Tests Pico firmware
 - Builds all Pico machine types (dual boiler, single boiler, heat exchanger)
 - Uploads firmware artifacts
 
 #### `release.yml` - Release Build
+
 - Triggered on version tags (e.g., `v0.2.0`)
 - Builds Pico firmware for all machine types
 - Checks out app repository and builds app for ESP32
@@ -41,6 +44,7 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 **Location:** `app/.github/workflows/`
 
 #### `ci.yml` - Continuous Integration
+
 - Runs on PRs to `main`
 - Lints code
 - Type checks TypeScript
@@ -48,11 +52,13 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Uploads build artifacts
 
 #### `trigger-cloud-staging.yml` - Trigger Cloud Staging Deployment
+
 - Runs on push to `main` (when app code changes)
 - Triggers cloud repository's staging deployment workflow via `repository_dispatch`
 - Allows staging to deploy automatically when app changes, even though repos are separate
 
 #### `release.yml` - Release Build
+
 - Triggered on version tags (e.g., `app-v0.2.0`)
 - Builds app for cloud and ESP32
 - Uploads build artifacts
@@ -62,6 +68,7 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 **Location:** `cloud/.github/workflows/`
 
 #### `ci.yml` - Continuous Integration
+
 - Runs on PRs to `main`
 - Lints code
 - Type checks TypeScript (cloud service and admin UI)
@@ -69,6 +76,7 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Uploads build artifacts
 
 #### `deploy-staging.yml` - Deploy to Staging
+
 - Runs on push to `main` (when cloud code changes) OR `repository_dispatch` (when app code changes)
 - When triggered by cloud changes: Verifies cloud build, then waits for app build
 - When triggered by app changes: Skips cloud build check, waits for app build
@@ -78,6 +86,7 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Health checks after deployment
 
 #### `release.yml` - Deploy to Production
+
 - Triggered on version tags (e.g., `cloud-v0.2.0`)
 - Checks out app repository (tries to match version tag, falls back to main)
 - Builds app for cloud
@@ -89,6 +98,7 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 **Location:** `web/.github/workflows/`
 
 #### `pages.yml` - Deploy to GitHub Pages
+
 - Runs on push to `main`
 - Builds Astro site
 - Deploys to GitHub Pages
@@ -102,6 +112,7 @@ Each repository uses its own version tags:
 - **cloud:** `cloud-v0.2.0` (cloud service releases)
 
 When releasing:
+
 1. Tag firmware with `v0.2.0` → builds and releases firmware
 2. Tag app with `app-v0.2.0` → builds app artifacts
 3. Tag cloud with `cloud-v0.2.0` → deploys to production (uses matching app version if available)
@@ -109,15 +120,18 @@ When releasing:
 ## Cross-Repository Dependencies
 
 ### Firmware → App
+
 - Firmware workflows checkout app repository when building ESP32 firmware
 - Uses `actions/checkout@v6` with `repository: brewos-io/app`
 
 ### Cloud → App
+
 - Cloud workflows checkout app repository when deploying
 - Tries to match version tags (e.g., `cloud-v0.2.0` → `app-v0.2.0`)
 - Falls back to `main` if matching version not found
 
 ### App → Cloud
+
 - App workflow triggers cloud staging deployment via `repository_dispatch` when app changes are pushed to `main`
 - Cloud workflow accepts `deploy-staging` repository_dispatch events
 - This enables automatic staging deployment when app code changes, even though repos are separate
@@ -125,9 +139,11 @@ When releasing:
 ## Secrets Required
 
 ### Firmware Repository
+
 - `GITHUB_TOKEN` (automatically provided) - for checking out app repository
 
 ### Cloud Repository
+
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `STAGING_SSH_HOST` - Staging server hostname
 - `STAGING_SERVER_SSH_KEY` - SSH key for staging server
@@ -145,16 +161,17 @@ When releasing:
 ## Troubleshooting
 
 ### App build fails in firmware workflow
+
 - Check that app repository is accessible
 - Verify `GITHUB_TOKEN` has permissions to read app repository
 
 ### Cloud deployment fails
+
 - Check that app repository is accessible
 - Verify app version tag matches cloud version tag (or main branch is up to date)
 - Check server SSH keys and hostnames in secrets
 
 ### Version mismatch
+
 - Ensure version tags follow the pattern: `v*`, `app-v*`, `cloud-v*`
 - Cloud workflow will use main branch if matching app version not found
-
-
