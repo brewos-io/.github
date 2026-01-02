@@ -47,6 +47,11 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Builds for both cloud and ESP32 targets
 - Uploads build artifacts
 
+#### `trigger-cloud-staging.yml` - Trigger Cloud Staging Deployment
+- Runs on push to `main` (when app code changes)
+- Triggers cloud repository's staging deployment workflow via `repository_dispatch`
+- Allows staging to deploy automatically when app changes, even though repos are separate
+
 #### `release.yml` - Release Build
 - Triggered on version tags (e.g., `app-v0.2.0`)
 - Builds app for cloud and ESP32
@@ -64,7 +69,9 @@ This document describes the GitHub Actions workflows across all BrewOS repositor
 - Uploads build artifacts
 
 #### `deploy-staging.yml` - Deploy to Staging
-- Runs on push to `main` (when cloud code changes)
+- Runs on push to `main` (when cloud code changes) OR `repository_dispatch` (when app code changes)
+- When triggered by cloud changes: Verifies cloud build, then waits for app build
+- When triggered by app changes: Skips cloud build check, waits for app build
 - Checks out app repository
 - Builds app for cloud
 - Deploys to staging server
@@ -109,6 +116,11 @@ When releasing:
 - Cloud workflows checkout app repository when deploying
 - Tries to match version tags (e.g., `cloud-v0.2.0` → `app-v0.2.0`)
 - Falls back to `main` if matching version not found
+
+### App → Cloud
+- App workflow triggers cloud staging deployment via `repository_dispatch` when app changes are pushed to `main`
+- Cloud workflow accepts `deploy-staging` repository_dispatch events
+- This enables automatic staging deployment when app code changes, even though repos are separate
 
 ## Secrets Required
 
