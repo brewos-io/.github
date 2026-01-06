@@ -5,6 +5,7 @@ This document lists all required GitHub secrets for each repository in the BrewO
 ## Overview
 
 Secrets are configured at the repository level in GitHub:
+
 1. Go to repository → **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret**
 3. Add the secret name and value
@@ -16,8 +17,8 @@ Secrets are configured at the repository level in GitHub:
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Notes |
-|------------|-------------|-------------|-------|
+| Secret Name    | Description                 | Required For | Notes                                   |
+| -------------- | --------------------------- | ------------ | --------------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for API access | CI, Releases | ✅ **Auto-provided** - No action needed |
 
 #### Optional Secrets
@@ -35,18 +36,23 @@ None - All workflows use the automatically provided `GITHUB_TOKEN`.
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Notes |
-|------------|-------------|-------------|-------|
+| Secret Name    | Description                 | Required For | Notes                                   |
+| -------------- | --------------------------- | ------------ | --------------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for API access | CI, Releases | ✅ **Auto-provided** - No action needed |
 
 #### Optional Secrets
 
-None - App repository workflows are self-contained.
+| Secret Name             | Description                         | Required For | Example/Format                             |
+| ----------------------- | ----------------------------------- | ------------ | ------------------------------------------ |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth Client ID (build-time) | App builds   | `123456789-abc.apps.googleusercontent.com` |
+| `VITE_FACEBOOK_APP_ID`  | Facebook App ID (build-time)        | App builds   | `1234567890123456`                         |
 
 #### Usage
 
 - **CI Workflow**: Builds and tests app
 - **Release Workflow**: Builds release artifacts
+
+**Note:** `VITE_*` variables are build-time variables that get embedded into the app bundle. These are needed when building the app in CI/CD workflows.
 
 ---
 
@@ -54,23 +60,22 @@ None - App repository workflows are self-contained.
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Example/Format |
-|------------|-------------|-------------|----------------|
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Staging, Production | `123456789-abc.apps.googleusercontent.com` |
-| `FACEBOOK_APP_ID` | Facebook OAuth App ID | Staging, Production | `1234567890123456` |
-| `FACEBOOK_APP_SECRET` | Facebook OAuth App Secret | Staging, Production | `abc123def456...` |
-| `VITE_FACEBOOK_APP_ID` | Facebook App ID for app build | Staging, Production | `1234567890123456` (same as FACEBOOK_APP_ID) |
-| `STAGING_SSH_HOST` | Staging server hostname | Staging Deployment | `staging.brewos.io` (optional, defaults to `staging.brewos.io`) |
-| `STAGING_SERVER_SSH_KEY` | SSH private key for staging server | Staging Deployment | SSH private key (see format below) |
-| `SERVER_SSH_HOST` | Production server hostname | Production Deployment | `cloud.brewos.io` (optional, defaults to `cloud.brewos.io`) |
-| `SERVER_SSH_KEY` | SSH private key for production server | Production Deployment | SSH private key (see format below) |
+| Secret Name              | Description                           | Required For          | Example/Format                                                  |
+| ------------------------ | ------------------------------------- | --------------------- | --------------------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`       | Google OAuth Client ID                | Staging, Production   | `123456789-abc.apps.googleusercontent.com`                      |
+| `FACEBOOK_APP_ID`        | Facebook OAuth App ID                 | Staging, Production   | `1234567890123456`                                              |
+| `FACEBOOK_APP_SECRET`    | Facebook OAuth App Secret             | Staging, Production   | `abc123def456...`                                               |
+| `STAGING_SSH_HOST`       | Staging server hostname               | Staging Deployment    | `staging.brewos.io` (optional, defaults to `staging.brewos.io`) |
+| `STAGING_SERVER_SSH_KEY` | SSH private key for staging server    | Staging Deployment    | SSH private key (see format below)                              |
+| `SERVER_SSH_HOST`        | Production server hostname            | Production Deployment | `cloud.brewos.io` (optional, defaults to `cloud.brewos.io`)     |
+| `SERVER_SSH_KEY`         | SSH private key for production server | Production Deployment | SSH private key (see format below)                              |
 
 #### Optional Secrets
 
-| Secret Name | Description | Default |
-|------------|-------------|---------|
-| `STAGING_SSH_HOST` | Staging server hostname | `staging.brewos.io` |
-| `SERVER_SSH_HOST` | Production server hostname | `cloud.brewos.io` |
+| Secret Name        | Description                | Default             |
+| ------------------ | -------------------------- | ------------------- |
+| `STAGING_SSH_HOST` | Staging server hostname    | `staging.brewos.io` |
+| `SERVER_SSH_HOST`  | Production server hostname | `cloud.brewos.io`   |
 
 #### Usage
 
@@ -94,7 +99,8 @@ cat ~/.ssh/brewos_deploy
 # Copy the entire output (including -----BEGIN and -----END lines)
 ```
 
-**Important:** 
+**Important:**
+
 - Never commit SSH keys to the repository
 - Use different keys for staging and production
 - Rotate keys periodically
@@ -116,16 +122,18 @@ cat ~/.ssh/brewos_deploy
 2. Create a new app or select existing
 3. Add "Facebook Login" product
 4. Go to **Settings** → **Basic** to get:
-   - **App ID** → Use for both `FACEBOOK_APP_ID` and `VITE_FACEBOOK_APP_ID` secrets
-   - **App Secret** → Use for `FACEBOOK_APP_SECRET` secret
+   - **App ID** → Use for both `FACEBOOK_APP_ID` (cloud) and `VITE_FACEBOOK_APP_ID` (app) secrets
+   - **App Secret** → Use for `FACEBOOK_APP_SECRET` secret (cloud)
 5. Configure OAuth Redirect URIs in **Settings** → **Basic** → **Add Platform** → **Website**:
    - `https://staging.brewos.io/`
    - `https://cloud.brewos.io/`
    - `http://localhost:5173/` (for local development)
 6. Add secrets to GitHub:
-   - `FACEBOOK_APP_ID` = Your App ID
-   - `FACEBOOK_APP_SECRET` = Your App Secret
-   - `VITE_FACEBOOK_APP_ID` = Your App ID (same as FACEBOOK_APP_ID)
+   - **Cloud Repository** (`brewos-io/cloud`):
+     - `FACEBOOK_APP_ID` = Your App ID
+     - `FACEBOOK_APP_SECRET` = Your App Secret
+   - **App Repository** (`brewos-io/app`):
+     - `VITE_FACEBOOK_APP_ID` = Your App ID (same as FACEBOOK_APP_ID, but needed for build-time)
 
 ---
 
@@ -133,8 +141,8 @@ cat ~/.ssh/brewos_deploy
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Notes |
-|------------|-------------|-------------|-------|
+| Secret Name    | Description                 | Required For     | Notes                                   |
+| -------------- | --------------------------- | ---------------- | --------------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for API access | Pages Deployment | ✅ **Auto-provided** - No action needed |
 
 #### Optional Secrets
@@ -147,9 +155,9 @@ None - Web repository uses GitHub Pages which doesn't require additional secrets
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Notes |
-|------------|-------------|-------------|-------|
-| None | - | - | No workflows currently configured |
+| Secret Name | Description | Required For | Notes                             |
+| ----------- | ----------- | ------------ | --------------------------------- |
+| None        | -           | -            | No workflows currently configured |
 
 ---
 
@@ -157,8 +165,8 @@ None - Web repository uses GitHub Pages which doesn't require additional secrets
 
 #### Required Secrets
 
-| Secret Name | Description | Required For | Notes |
-|------------|-------------|-------------|-------|
+| Secret Name    | Description                 | Required For         | Notes                                   |
+| -------------- | --------------------------- | -------------------- | --------------------------------------- |
 | `GITHUB_TOKEN` | GitHub token for API access | Coordinated Releases | ✅ **Auto-provided** - No action needed |
 
 #### Usage
@@ -182,9 +190,14 @@ None - Web repository uses GitHub Pages which doesn't require additional secrets
 - [ ] Create Google OAuth credentials
 - [ ] Add `GOOGLE_CLIENT_ID` secret
 - [ ] Create Facebook OAuth app
-- [ ] Add `FACEBOOK_APP_ID` secret
-- [ ] Add `FACEBOOK_APP_SECRET` secret
-- [ ] Add `VITE_FACEBOOK_APP_ID` secret (same value as FACEBOOK_APP_ID)
+- [ ] Add `FACEBOOK_APP_ID` secret (cloud repository)
+- [ ] Add `FACEBOOK_APP_SECRET` secret (cloud repository)
+- [ ] Add `VITE_FACEBOOK_APP_ID` secret (app repository - same value as FACEBOOK_APP_ID)
+
+### For App Repository
+
+- [ ] Add `VITE_FACEBOOK_APP_ID` secret (if using Facebook login)
+- [ ] Add `VITE_GOOGLE_CLIENT_ID` secret (if using Google login)
 
 ### For Other Repositories
 
@@ -267,15 +280,21 @@ ssh -i ~/.ssh/brewos_deploy root@cloud.brewos.io
 
 ### Minimum Required Secrets
 
-**Cloud Repository Only:**
+**Cloud Repository:**
+
 - `GOOGLE_CLIENT_ID`
 - `FACEBOOK_APP_ID` (optional - only if using Facebook login)
 - `FACEBOOK_APP_SECRET` (optional - only if using Facebook login)
-- `VITE_FACEBOOK_APP_ID` (optional - only if using Facebook login)
 - `STAGING_SERVER_SSH_KEY`
 - `SERVER_SSH_KEY`
 
+**App Repository:**
+
+- `VITE_FACEBOOK_APP_ID` (optional - only if using Facebook login)
+- `VITE_GOOGLE_CLIENT_ID` (optional - only if using Google login)
+
 **All Other Repositories:**
+
 - None (use auto-provided `GITHUB_TOKEN`)
 
 ### Optional Secrets
@@ -294,5 +313,3 @@ If you encounter issues with secrets:
 3. Test SSH connections manually
 4. Review this document for setup steps
 5. Open an issue in the relevant repository
-
-
