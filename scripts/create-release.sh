@@ -83,8 +83,12 @@ check_repo_clean() {
     return 1
   fi
   
+  # Refresh index to avoid false positives from stale cache
+  git update-index --refresh >/dev/null 2>&1 || true
+  
   # Check for uncommitted changes (before version bump)
-  if ! git diff-index --quiet HEAD --; then
+  # Use git status --porcelain as it's more reliable than diff-index
+  if [ -n "$(git status --porcelain)" ]; then
     echo "  ❌ $name has uncommitted changes"
     echo "     Please commit or stash changes before creating a release"
     git status --short
@@ -94,6 +98,17 @@ check_repo_clean() {
   # Pull latest
   echo "  📥 Pulling latest changes..."
   git pull origin main || true
+  
+  # Refresh index again after pull to ensure it's up to date
+  git update-index --refresh >/dev/null 2>&1 || true
+  
+  # Check again after pull (in case pull created merge conflicts or changes)
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "  ❌ $name has uncommitted changes after pull"
+    echo "     Please commit or stash changes before creating a release"
+    git status --short
+    return 1
+  fi
   
   return 0
 }
