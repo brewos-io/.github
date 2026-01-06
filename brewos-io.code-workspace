@@ -23,6 +23,10 @@
     {
       "name": "BrewOS Home Assistant",
       "path": "homeassistant"
+    },
+    {
+      "name": "BrewOS Wiki",
+      "path": "wiki"
     }
   ],
   "settings": {
@@ -41,7 +45,8 @@
       "./app",
       "./cloud",
       "./web",
-      "./homeassistant"
+      "./homeassistant",
+      "./wiki"
     ],
     "scm.repositories.visible": 10,
     "scm.defaultViewMode": "tree"
