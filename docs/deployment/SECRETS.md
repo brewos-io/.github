@@ -57,6 +57,9 @@ None - App repository workflows are self-contained.
 | Secret Name | Description | Required For | Example/Format |
 |------------|-------------|-------------|----------------|
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Staging, Production | `123456789-abc.apps.googleusercontent.com` |
+| `FACEBOOK_APP_ID` | Facebook OAuth App ID | Staging, Production | `1234567890123456` |
+| `FACEBOOK_APP_SECRET` | Facebook OAuth App Secret | Staging, Production | `abc123def456...` |
+| `VITE_FACEBOOK_APP_ID` | Facebook App ID for app build | Staging, Production | `1234567890123456` (same as FACEBOOK_APP_ID) |
 | `STAGING_SSH_HOST` | Staging server hostname | Staging Deployment | `staging.brewos.io` (optional, defaults to `staging.brewos.io`) |
 | `STAGING_SERVER_SSH_KEY` | SSH private key for staging server | Staging Deployment | SSH private key (see format below) |
 | `SERVER_SSH_HOST` | Production server hostname | Production Deployment | `cloud.brewos.io` (optional, defaults to `cloud.brewos.io`) |
@@ -106,6 +109,23 @@ cat ~/.ssh/brewos_deploy
    - `https://staging.brewos.io/auth/google/callback`
    - `https://cloud.brewos.io/auth/google/callback`
 6. Copy Client ID to `GOOGLE_CLIENT_ID` secret
+
+#### Facebook OAuth Setup
+
+1. Go to [Facebook Developers Console](https://developers.facebook.com/)
+2. Create a new app or select existing
+3. Add "Facebook Login" product
+4. Go to **Settings** → **Basic** to get:
+   - **App ID** → Use for both `FACEBOOK_APP_ID` and `VITE_FACEBOOK_APP_ID` secrets
+   - **App Secret** → Use for `FACEBOOK_APP_SECRET` secret
+5. Configure OAuth Redirect URIs in **Settings** → **Basic** → **Add Platform** → **Website**:
+   - `https://staging.brewos.io/`
+   - `https://cloud.brewos.io/`
+   - `http://localhost:5173/` (for local development)
+6. Add secrets to GitHub:
+   - `FACEBOOK_APP_ID` = Your App ID
+   - `FACEBOOK_APP_SECRET` = Your App Secret
+   - `VITE_FACEBOOK_APP_ID` = Your App ID (same as FACEBOOK_APP_ID)
 
 ---
 
@@ -161,6 +181,10 @@ None - Web repository uses GitHub Pages which doesn't require additional secrets
 - [ ] Optionally add `SERVER_SSH_HOST` if different from default
 - [ ] Create Google OAuth credentials
 - [ ] Add `GOOGLE_CLIENT_ID` secret
+- [ ] Create Facebook OAuth app
+- [ ] Add `FACEBOOK_APP_ID` secret
+- [ ] Add `FACEBOOK_APP_SECRET` secret
+- [ ] Add `VITE_FACEBOOK_APP_ID` secret (same value as FACEBOOK_APP_ID)
 
 ### For Other Repositories
 
@@ -185,6 +209,13 @@ ssh -i ~/.ssh/brewos_deploy root@cloud.brewos.io
 1. Deploy to staging
 2. Visit `https://staging.brewos.io`
 3. Try to sign in with Google
+4. Verify redirect works correctly
+
+### Test Facebook OAuth
+
+1. Deploy to staging
+2. Visit `https://staging.brewos.io`
+3. Try to sign in with Facebook
 4. Verify redirect works correctly
 
 ---
@@ -216,6 +247,14 @@ ssh -i ~/.ssh/brewos_deploy root@cloud.brewos.io
 - Ensure OAuth consent screen is configured
 - Verify API is enabled
 
+### Facebook OAuth Fails
+
+- Verify `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` are correct
+- Verify `VITE_FACEBOOK_APP_ID` matches `FACEBOOK_APP_ID`
+- Check authorized redirect URIs in Facebook App Settings
+- Ensure Facebook Login product is added to your app
+- Verify app is not in development mode restrictions (if testing with non-admin users)
+
 ### Workflow Fails with "Secret not found"
 
 - Verify secret name matches exactly (case-sensitive)
@@ -230,6 +269,9 @@ ssh -i ~/.ssh/brewos_deploy root@cloud.brewos.io
 
 **Cloud Repository Only:**
 - `GOOGLE_CLIENT_ID`
+- `FACEBOOK_APP_ID` (optional - only if using Facebook login)
+- `FACEBOOK_APP_SECRET` (optional - only if using Facebook login)
+- `VITE_FACEBOOK_APP_ID` (optional - only if using Facebook login)
 - `STAGING_SERVER_SSH_KEY`
 - `SERVER_SSH_KEY`
 
