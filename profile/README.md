@@ -13,6 +13,7 @@
   <a href="#repositories">Repositories</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#documentation">Documentation</a> •
+  <a href="#wiki">Wiki</a> •
   <a href="#community">Community</a>
 </p>
 
@@ -97,6 +98,20 @@ Home Assistant integration components for BrewOS:
 **Status:** ✅ Active  
 **Integration Methods:** MQTT, Native Component
 
+### [wiki](https://github.com/brewos-io/wiki) - User Documentation
+
+Comprehensive user documentation and guides for BrewOS:
+
+- **Getting Started** - Installation guides and system requirements
+- **User Manual** - Complete guide to using BrewOS web interface
+- **Features** - Detailed documentation for all features
+- **Machine-Specific Guides** - Configuration for different machine types
+- **Troubleshooting** - Common issues and solutions
+- **Advanced Topics** - Custom configurations and API reference
+
+**Status:** ✅ Active  
+**Content:** Markdown documentation
+
 ---
 
 ## Quick Start
@@ -118,6 +133,7 @@ Home Assistant integration components for BrewOS:
    git clone https://github.com/brewos-io/cloud.git
    git clone https://github.com/brewos-io/web.git
    git clone https://github.com/brewos-io/homeassistant.git
+   git clone https://github.com/brewos-io/wiki.git
    ```
 
 2. **Set up the firmware:**
@@ -126,6 +142,7 @@ Home Assistant integration components for BrewOS:
 
 3. **Explore the documentation:**
 
+   - [BrewOS Wiki](https://github.com/brewos-io/wiki) - Complete user documentation
    - [Firmware Documentation](https://github.com/brewos-io/firmware/tree/main/docs)
    - [Home Assistant Integration Guide](https://github.com/brewos-io/homeassistant#readme)
 
@@ -163,6 +180,14 @@ See the [Compatibility List](https://github.com/brewos-io/firmware/blob/main/doc
 
 ## Documentation
 
+### User Wiki
+
+- **[BrewOS Wiki](https://github.com/brewos-io/wiki)** - Complete user documentation
+- [Getting Started Guide](https://github.com/brewos-io/wiki/tree/main/01-Getting-Started) - Installation and setup
+- [User Manual](https://github.com/brewos-io/wiki/tree/main/03-User-Manual) - Web interface and machine control
+- [Features Documentation](https://github.com/brewos-io/wiki/tree/main/04-Features) - All BrewOS features
+- [Troubleshooting](https://github.com/brewos-io/wiki/tree/main/06-Troubleshooting) - Common issues and solutions
+
 ### Getting Started
 
 - [Firmware Setup Guide](https://github.com/brewos-io/firmware/blob/main/SETUP.md)
@@ -177,6 +202,7 @@ See the [Compatibility List](https://github.com/brewos-io/firmware/blob/main/doc
 
 ### Integration Guides
 
+- [BrewOS Wiki](https://github.com/brewos-io/wiki) - Complete user documentation and guides
 - [Home Assistant Integration](https://github.com/brewos-io/homeassistant#readme)
 - [MQTT Integration](https://github.com/brewos-io/firmware/blob/main/docs/esp32/integrations/MQTT.md)
 - [Cloud Service](https://github.com/brewos-io/cloud#readme)
@@ -205,6 +231,21 @@ We welcome contributions! Please see the contributing guidelines for each reposi
 | 🟠 High     | Stability    | Bug fixes, reliability            |
 | 🟡 Medium   | Features     | New machine support, integrations |
 | 🟢 Normal   | Enhancements | UI improvements, optimizations    |
+
+---
+
+## Wiki
+
+The [BrewOS Wiki](https://github.com/brewos-io/wiki) provides comprehensive user documentation:
+
+- **Getting Started** - Installation, setup, and system requirements
+- **User Manual** - Complete guide to the web interface and machine control
+- **Features** - Detailed documentation for temperature control, scheduling, MQTT, and more
+- **Machine-Specific** - Configuration guides for dual boiler, single boiler, and HX machines
+- **Troubleshooting** - Common issues, error codes, and diagnostics
+- **Advanced** - Custom configurations, API reference, and hardware modifications
+
+For the complete documentation, visit: **[github.com/brewos-io/wiki](https://github.com/brewos-io/wiki)**
 
 ---
 
