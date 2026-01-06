@@ -36,6 +36,18 @@ BrewOS is an open-source control system designed to replace factory controllers 
 
 ---
 
+## Web Interface Showcase
+
+<p align="center">
+  <img src="assets/github/web_interface_showcase.gif" alt="BrewOS Web Interface Showcase" width="800">
+</p>
+
+<p align="center">
+  <em>Modern, responsive web interface for monitoring and controlling your espresso machine</em>
+</p>
+
+---
+
 ## Repositories
 
 This organization contains the following repositories:
