@@ -286,20 +286,56 @@ if [ "$SKIP_FIRMWARE" = false ]; then
     fi
     
     cd "$FIRMWARE_DIR/src/scripts"
-    # Capture output and exit code, only show on error
+    
+    # Build Pico firmware
+    print_info "Building Pico firmware..."
     set +e  # Temporarily disable exit on error to capture output
-    BUILD_OUTPUT=$(./build_firmware.sh all 2>&1)
+    BUILD_OUTPUT=$(./build_firmware.sh pico 2>&1)
     BUILD_EXIT_CODE=$?
     set -e  # Re-enable exit on error
     
     if [ $BUILD_EXIT_CODE -eq 0 ]; then
-        print_success "Firmware built successfully"
+        print_success "Pico firmware built successfully"
     else
-        print_error "Firmware build failed"
+        print_error "Pico firmware build failed"
         echo ""
         echo "$BUILD_OUTPUT"
         exit $BUILD_EXIT_CODE
     fi
+    
+    # Build ESP32 firmware (with screen)
+    print_info "Building ESP32 firmware (with screen)..."
+    set +e  # Temporarily disable exit on error to capture output
+    BUILD_OUTPUT=$(./build_firmware.sh esp32 2>&1)
+    BUILD_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        print_success "ESP32 firmware (with screen) built successfully"
+    else
+        print_error "ESP32 firmware (with screen) build failed"
+        echo ""
+        echo "$BUILD_OUTPUT"
+        exit $BUILD_EXIT_CODE
+    fi
+    
+    # Build ESP32 firmware (no screen)
+    print_info "Building ESP32 firmware (headless)..."
+    set +e  # Temporarily disable exit on error to capture output
+    BUILD_OUTPUT=$(./build_firmware.sh esp32-noscreen 2>&1)
+    BUILD_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        print_success "ESP32 firmware (headless) built successfully"
+    else
+        print_error "ESP32 firmware (headless) build failed"
+        echo ""
+        echo "$BUILD_OUTPUT"
+        exit $BUILD_EXIT_CODE
+    fi
+    
+    print_success "All firmware variants built successfully"
 else
     print_step "Building Firmware (ESP32 + Pico)..."
     print_warning "Skipped (--skip-firmware or --fast)"
