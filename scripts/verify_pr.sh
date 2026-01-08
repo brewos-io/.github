@@ -56,8 +56,8 @@ SKIP_TESTS=false
 SKIP_APP=false
 SKIP_CLOUD=false
 
-for arg in "$@"; do
-    case $arg in
+while [ $# -gt 0 ]; do
+    case $1 in
         --skip-firmware)
             SKIP_FIRMWARE=true
             shift
@@ -86,7 +86,7 @@ for arg in "$@"; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Unknown option: $arg${NC}"
+            echo -e "${RED}Unknown option: $1${NC}"
             echo "Use --help for usage information"
             exit 1
             ;;
